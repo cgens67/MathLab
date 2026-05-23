@@ -9,8 +9,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.ui.settings.SettingsManager
 
 private val DarkColorScheme =
   darkColorScheme(
@@ -257,3 +260,30 @@ fun MyApplicationTheme(
       content = content
   )
 }
+
+@Composable
+fun appRoundedCornerShape(
+    size: androidx.compose.ui.unit.Dp = 0.dp,
+    topStart: androidx.compose.ui.unit.Dp = size,
+    topEnd: androidx.compose.ui.unit.Dp = size,
+    bottomEnd: androidx.compose.ui.unit.Dp = size,
+    bottomStart: androidx.compose.ui.unit.Dp = size
+): RoundedCornerShape {
+    val roundedness by SettingsManager.shapeRoundedness.collectAsState()
+    val multiplier = when (roundedness) {
+        "Classic Brutalist" -> 0f
+        "Organic Fluid" -> 1.5f
+        else -> 1f
+    }
+    return if (size != 0.dp && topStart == size && topEnd == size && bottomEnd == size && bottomStart == size) {
+        RoundedCornerShape(size * multiplier)
+    } else {
+        RoundedCornerShape(
+            topStart = topStart * multiplier,
+            topEnd = topEnd * multiplier,
+            bottomEnd = bottomEnd * multiplier,
+            bottomStart = bottomStart * multiplier
+        )
+    }
+}
+

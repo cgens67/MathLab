@@ -2,10 +2,12 @@ package com.example.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,40 +21,58 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlin.math.roundToInt
 
 @Composable
 fun SupportDevelopmentModal(
     onDismiss: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
-
-    // Smooth entry transition states for a flawless 60fps sliding slide-up
+    // Smooth entry transition states
     var animateIn by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         animateIn = true
     }
 
-    // Dynamic dark mode colors representing premium Material 3 palettes
-    val containerBg = if (isDark) Color(0xFF191C1C) else Color(0xFFF5FAF8)
-    val textPrimary = if (isDark) Color(0xFFE1E3E1) else Color(0xFF191C1B)
-    val textSecondary = if (isDark) Color(0xFFBFC9C5) else Color(0xFF3F4946)
-    val lineCol = if (isDark) Color(0xFF3F4946) else Color(0xFF505A58).copy(alpha = 0.4f)
+    // Drag to Dismiss engine
+    var dragOffsetY by remember { mutableStateOf(0f) }
+    var isDismissing by remember { mutableStateOf(false) }
+
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = if (isDismissing) 1200f else dragOffsetY,
+        animationSpec = spring(stiffness = 300f, dampingRatio = 0.85f),
+        label = "DragDismiss",
+        finishedListener = { value ->
+            if (isDismissing || value >= 1000f) {
+                onDismiss()
+            }
+        }
+    )
+
+    // Dynamic MD3 Colors - Now completely respecting the app's theme and light/dark settings
+    val containerBg = MaterialTheme.colorScheme.surface
+    val textPrimary = MaterialTheme.colorScheme.onSurface
+    val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
+    val lineCol = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
     
-    val gitHubBtnBg = if (isDark) Color(0xFF005046) else Color(0xFFCCECE6)
-    val gitHubBtnText = if (isDark) Color(0xFF9FF2E4) else Color(0xFF003731)
+    val gitHubBtnBg = MaterialTheme.colorScheme.secondaryContainer
+    val gitHubBtnText = MaterialTheme.colorScheme.onSecondaryContainer
     
-    val payPalBtnBg = if (isDark) Color(0xFF0C61A4) else Color(0xFF00457C)
-    val payPalBtnText = Color.White
+    val payPalBtnBg = MaterialTheme.colorScheme.tertiaryContainer
+    val payPalBtnText = MaterialTheme.colorScheme.onTertiaryContainer
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            isDismissing = true
+        },
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = true
@@ -62,12 +82,17 @@ fun SupportDevelopmentModal(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { onDismiss() }
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { 
+                    isDismissing = true 
+                }
                 .testTag("support_development_modal_overlay"),
             contentAlignment = Alignment.BottomCenter
         ) {
             AnimatedVisibility(
-                visible = animateIn,
+                visible = animateIn && !isDismissing,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = spring(dampingRatio = 0.85f, stiffness = 300f)
@@ -77,39 +102,65 @@ fun SupportDevelopmentModal(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(enabled = false) { } // Prevent click propagation and dismissing
+                    .offset { IntOffset(0, animatedOffsetY.roundToInt()) }
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = true
+                    ) { /* Prevent click propagation to background */ }
             ) {
                 Surface(
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                     color = containerBg,
+                    tonalElevation = 8.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("support_development_content")
+                        // Drag handler applied to drag handle or entire surface
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragEnd = {
+                                    if (dragOffsetY > 180f) {
+                                        isDismissing = true
+                                    } else {
+                                        dragOffsetY = 0f
+                                    }
+                                },
+                                onDragCancel = {
+                                    dragOffsetY = 0f
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    // Only allow downward dragging
+                                    dragOffsetY = (dragOffsetY + dragAmount.y).coerceAtLeast(0f)
+                                }
+                            )
+                        }
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .padding(horizontal = 24.dp)
-                            .padding(top = 10.dp, bottom = 48.dp),
+                            .padding(top = 12.dp, bottom = 48.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Drag indicator replication
                         Box(
                             modifier = Modifier
-                                .width(36.dp)
-                                .height(4.dp)
+                                .width(40.dp)
+                                .height(5.dp)
                                 .clip(CircleShape)
                                 .background(lineCol)
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Deep Teal Heart icon centering top
+                        // Heart icon
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Support Heart",
-                            tint = if (isDark) Color(0xFF6CF2DE) else Color(0xFF00695C),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .size(72.dp)
                                 .testTag("support_heart_icon")

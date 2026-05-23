@@ -8,7 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.ui.theme.appRoundedCornerShape as RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -830,7 +830,8 @@ fun PolygonsScreen(
                         Text(
                             text = Localization.get("polygon_sides", currentLanguage),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         Badge(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -921,7 +922,7 @@ fun PolygonsScreen(
                     Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 4.dp))
 
                     Text(
-                        text = "Langkah Pengiraan (Steps):",
+                        text = Localization.get("calculation_steps", currentLanguage),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1183,7 +1184,7 @@ fun CirclesScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Langkah Pengiraan (Steps):",
+                        text = Localization.get("calculation_steps", currentLanguage),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1507,7 +1508,7 @@ fun ThreeDShapesScreen(
                     Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 4.dp))
 
                     Text(
-                        text = "Formula & Langkah (Calculation steps):",
+                        text = Localization.get("calculation_steps", currentLanguage),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )

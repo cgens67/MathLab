@@ -10,7 +10,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.ui.theme.appRoundedCornerShape as RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -277,23 +277,52 @@ fun RationalNumbersSection(lang: String) {
                     ) {
                         Button(
                             onClick = { numValue = (numValue - 1f).coerceIn(-5f, 5f) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
                         ) {
-                            Text("- Left (Kiri)")
+                            Text(
+                                text = when (lang) {
+                                    "English" -> "- Left"
+                                    "Chinese" -> "- 向左"
+                                    else -> "- Kiri"
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                         
                         Button(
                             onClick = { scaleFactor = if (scaleFactor == 1f) -1f else 1f },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer),
+                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
                         ) {
-                            Text(if (scaleFactor == 1f) "Multiply -1" else "Multiply +1")
+                            Text(
+                                text = if (scaleFactor == 1f) "× -1" else "× +1",
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
 
                         Button(
                             onClick = { numValue = (numValue + 1f).coerceIn(-5f, 5f) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
                         ) {
-                            Text("+ Right (Kanan)")
+                            Text(
+                                text = when (lang) {
+                                    "English" -> "+ Right"
+                                    "Chinese" -> "+ 向右"
+                                    else -> "+ Kanan"
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                     }
                 }

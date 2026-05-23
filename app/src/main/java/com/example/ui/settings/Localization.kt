@@ -126,7 +126,8 @@ object Localization {
             "l_val" to "Length (l):",
             "s_val" to "Slant height (s):",
             "student_tip" to "Student Tip: Remember that in school textbooks and formula sheets, a fraction line represents division (÷), and side-by-side variables like 'ab' mean 'a multiplied by b' (a × b).",
-            "swipe_to_see" to "Swipe the carousel below to see how each step moves components across the equals (=) sign!"
+            "swipe_to_see" to "Swipe the carousel below to see how each step moves components across the equals (=) sign!",
+            "calculation_steps" to "Calculation Steps:"
         ),
         "Bahasa Melayu" to mapOf(
             "app_title" to "Math Expressive",
@@ -205,7 +206,8 @@ object Localization {
             "l_val" to "Panjang (p):",
             "s_val" to "Tinggi serong (s):",
             "student_tip" to "Tip Pelajar: Ingat bahawa dalam buku teks sekolah, garisan pecahan bermaksud bahagi (÷), dan pemboleh ubah bersebelahan seperti 'ab' bermaksud 'a didarab dengan b' (a × b).",
-            "swipe_to_see" to "Leret karusel di bawah untuk melihat bagaimana setiap langkah memindahkan komponen merentasi tanda sama dengan (=)!"
+            "swipe_to_see" to "Leret karusel di bawah untuk melihat bagaimana setiap langkah memindahkan komponen merentasi tanda sama dengan (=)!",
+            "calculation_steps" to "Langkah Pengiraan:"
         ),
         "Chinese" to mapOf(
             "app_title" to "MathExpressive 数学实验室",
@@ -284,7 +286,8 @@ object Localization {
             "l_val" to "长 (l)：",
             "s_val" to "母线长/斜高 (s)：",
             "student_tip" to "学习小贴士：请记住，在教科书和公式表中，分度线代表除法（÷），而如 'ab' 的连写变量表示 'a 乘以 b'（a × b）。",
-            "swipe_to_see" to "左右滑动下方的卡片，查看每个变换步骤如何将项移过等号（=）！"
+            "swipe_to_see" to "左右滑动下方的卡片，查看每个变换步骤如何将项移过等号（=）！",
+            "calculation_steps" to "计算步骤："
         )
     )
 }
