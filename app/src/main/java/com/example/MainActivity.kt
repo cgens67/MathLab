@@ -1,0 +1,173 @@
+package com.example
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import com.example.ui.screens.*
+import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.settings.SettingsManager
+
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    
+    // Initialize preferences dynamically from storage
+    SettingsManager.init(applicationContext)
+
+    enableEdgeToEdge()
+    setContent {
+      // Collect flow states dynamically
+      val currentLanguage by SettingsManager.language.collectAsState()
+      val enableDynamicTheme by SettingsManager.enableDynamicTheme.collectAsState()
+      val darkTheme by SettingsManager.darkTheme.collectAsState()
+      val disableBlurEffects by SettingsManager.disableBlurEffects.collectAsState()
+      val useSystemFont by SettingsManager.useSystemFont.collectAsState()
+
+      val themePreset by SettingsManager.themePreset.collectAsState()
+      val fontSizeScale by SettingsManager.fontSizeScale.collectAsState()
+      val shapeRoundedness by SettingsManager.shapeRoundedness.collectAsState()
+
+      // Navigation stack utilizing mutableStateListOf for high responsiveness
+      val navigationStack = remember { mutableStateListOf("dashboard") }
+      val currentScreen = navigationStack.lastOrNull() ?: "dashboard"
+
+      MyApplicationTheme(
+          darkTheme = darkTheme,
+          dynamicColor = enableDynamicTheme,
+          themePreset = themePreset,
+          fontSizeScale = fontSizeScale,
+          shapeRoundedness = shapeRoundedness
+      ) {
+          Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+              AnimatedContent(
+                  targetState = currentScreen,
+                  modifier = Modifier
+                      .fillMaxSize()
+                      .padding(innerPadding),
+                  transitionSpec = {
+                      fadeIn(animationSpec = spring(stiffness = 250f)) + slideInHorizontally(
+                          animationSpec = spring(stiffness = 250f),
+                          initialOffsetX = { 350 }
+                      ) togetherWith
+                      fadeOut(animationSpec = spring(stiffness = 250f)) + slideOutHorizontally(
+                          animationSpec = spring(stiffness = 250f),
+                          targetOffsetX = { -350 }
+                      )
+                  },
+                  label = "ScreenTransition"
+              ) { screen ->
+                  when (screen) {
+                      "dashboard" -> {
+                          DashboardScreen(
+                              currentLanguage = currentLanguage,
+                              onNavigateToTopic = { topic ->
+                                  navigationStack.add(topic)
+                              },
+                              onNavigateToLanguage = {
+                                  navigationStack.add("language")
+                              },
+                              onNavigateToAppearance = {
+                                  navigationStack.add("appearance")
+                              }
+                          )
+                      }
+                      "language" -> {
+                          LanguageScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "appearance" -> {
+                          AppearanceScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              },
+                              enableDynamic = enableDynamicTheme,
+                              darkTheme = darkTheme,
+                              disableBlurs = disableBlurEffects,
+                              useSystemFont = useSystemFont
+                          )
+                      }
+                      "patterns" -> {
+                          PatternsScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "algebra" -> {
+                          AlgebraScreens(
+                              currentLanguage = currentLanguage,
+                              useSystemFont = useSystemFont,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "polygons" -> {
+                          PolygonsScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "circles" -> {
+                          CirclesScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "shapes" -> {
+                          ThreeDShapesScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "catchup" -> {
+                          CatchUpScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                  }
+              }
+          }
+      }
+    }
+  }
+}

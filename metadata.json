@@ -1,0 +1,6 @@
+{
+  "name": "Math Expressive",
+  "description": "Material 3 Expressive Calculator app for Tingkatan 2 Mathematics, with interactive equation solvers and step-by-step algebraic visualization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
