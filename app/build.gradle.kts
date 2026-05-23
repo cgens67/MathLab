@@ -22,11 +22,20 @@ android {
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
+      val keystoreFile = if (keystorePath.isNotEmpty()) file(keystorePath) else null
+      if (keystoreFile != null && keystoreFile.exists() && System.getenv("STORE_PASSWORD") != null) {
+        storeFile = keystoreFile
+        storePassword = System.getenv("STORE_PASSWORD")
+        keyAlias = "upload"
+        keyPassword = System.getenv("KEY_PASSWORD")
+      } else {
+        // Fallback to debug keystore for easy local and CI release builds when production key is not set
+        storeFile = file("${rootDir}/debug.keystore")
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      }
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -118,4 +127,11 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
+}
+
+tasks.register<Copy>("copyReleaseApk") {
+  dependsOn("assembleRelease")
+  from(layout.buildDirectory.dir("outputs/apk/release"))
+  include("app-release.apk")
+  into(rootProject.layout.projectDirectory.dir(".build-outputs"))
 }
