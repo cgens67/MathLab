@@ -39,10 +39,8 @@ import com.example.ui.components.SupportDevelopmentModal
 fun DashboardScreen(
     currentLanguage: String,
     onNavigateToTopic: (String) -> Unit,
-    onNavigateToLanguage: () -> Unit,
-    onNavigateToAppearance: () -> Unit
+    onNavigateToSettings: () -> Unit
 ) {
-    var showSupportModal by remember { mutableStateOf(false) }
     val isDark = MaterialTheme.colorScheme.background.run { (red + green + blue) < 1.5f }
 
     val (patternsBg, patternsText) = if (isDark) Pair(ColorPatternsBgDark, ColorPatternsTextDark) else Pair(ColorPatternsBgLight, ColorPatternsTextLight)
@@ -69,31 +67,12 @@ fun DashboardScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { showSupportModal = true },
-                        modifier = Modifier.testTag("nav_support_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Support Development",
-                            tint = Color(0xFFE91E63) // Pinkish red for visual pop and warmth
-                        )
-                    }
-                    IconButton(
-                        onClick = onNavigateToLanguage,
-                        modifier = Modifier.testTag("nav_language_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = "Change Language"
-                        )
-                    }
-                    IconButton(
-                        onClick = onNavigateToAppearance,
-                        modifier = Modifier.testTag("nav_appearance_button")
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier.testTag("nav_settings_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Appearance Settings"
+                            contentDescription = "Settings"
                         )
                     }
                 }
@@ -115,7 +94,7 @@ fun DashboardScreen(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 16.dp)
                     .testTag("student_tip_banner")
             ) {
                 Row(
@@ -138,6 +117,59 @@ fun DashboardScreen(
                 }
             }
 
+            // Topic booster: Form 1 Catch-Up Booster Card placed prominently in the main Column layout!
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp)
+                    .clickable { onNavigateToTopic("catchup") }
+                    .testTag("booster_catchup_card"),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.RocketLaunch,
+                            contentDescription = "Catch Up Booster",
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (currentLanguage == "English") "Let's Start Over & Catch Up! 🚀" else "Mari Mula Semula Untuk Kejar! 🚀",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (currentLanguage == "English") 
+                                "Struggling? Master core Form 1 Math skills (Rational Numbers, Algebra, Equations, Polygons) to boost your Form 2 journey!"
+                                else "Sukar faham? Kuasai topik teras Matematik T1 untuk melonjakkan prestasi T2 anda!",
+                            style = MaterialTheme.typography.bodySmall,
+                            lineHeight = 16.sp,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
+                        )
+                    }
+                }
+            }
+
             Text(
                 text = Localization.get("welcome", currentLanguage),
                 style = MaterialTheme.typography.titleMedium,
@@ -151,60 +183,6 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                // Topic booster: Form 1 Catch-Up Booster Card
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        ),
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToTopic("catchup") }
-                            .testTag("booster_catchup_card"),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.RocketLaunch,
-                                    contentDescription = "Catch Up Booster",
-                                    tint = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (currentLanguage == "English") "Let's Start Over & Catch Up! \uD83D\uDE80" else "Mari Mula Semula Untuk Kejar! \uD83D\uDE80",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = if (currentLanguage == "English") 
-                                        "Struggling? Master core Form 1 Math skills (Rational Numbers, Algebra, Equations, Polygons) to boost your Form 2 journey!"
-                                        else "Sukar faham? Kuasai topik teras Matematik T1 untuk melonjakkan prestasi T2 anda!",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    lineHeight = 16.sp,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
-                                )
-                            }
-                        }
-                    }
-                }
-
                 // Topic 1: Patterns and Sequences
                 item {
                     TopicCard(
@@ -269,66 +247,8 @@ fun DashboardScreen(
                         testTag = "topic_shapes"
                     )
                 }
-
-                // Support Development Callout Card
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFE0F2F1), // Soft teal mint matching attached layout
-                            contentColor = Color(0xFF004D40)
-                        ),
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showSupportModal = true }
-                            .testTag("booster_support_card"),
-                        border = BorderStroke(1.dp, Color(0xFF00796B).copy(alpha = 0.3f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFB2DFDB)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Favorite,
-                                    contentDescription = "Support Heart",
-                                    tint = Color(0xFF004D40),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (currentLanguage == "English") "Support MathLab Development \u2764\uFE0F" else "Sokong Pembangunan MathLab \u2764\uFE0F",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF004D40)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = if (currentLanguage == "English") 
-                                        "If you love this ad-free, interactive tool, click to see how you can support our continued development!"
-                                        else "Klik untuk menyokong pembangunan aplikasi pendidikan percuma dan bebas iklan ini!",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    lineHeight = 16.sp,
-                                    color = Color(0xFF004D40).copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
-    }
-
-    if (showSupportModal) {
-        SupportDevelopmentModal(onDismiss = { showSupportModal = false })
     }
 }
 

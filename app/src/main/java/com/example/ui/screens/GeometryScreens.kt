@@ -1,9 +1,11 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -119,7 +121,12 @@ fun PatternsScreen(
                 }
             }
 
-            result?.let { res ->
+            AnimatedVisibility(
+                visible = result != null,
+                enter = fadeIn() + expandVertically() + slideInVertically(initialOffsetY = { 40 }),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                val res = result ?: return@AnimatedVisibility
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     shape = RoundedCornerShape(24.dp),
@@ -134,7 +141,11 @@ fun PatternsScreen(
                         )
 
                         Text(
-                            text = if (currentLanguage == "Bahasa Melayu") res.patternDescriptionMs else res.patternDescriptionEn,
+                            text = if (currentLanguage == "Bahasa Melayu") res.patternDescriptionMs 
+                                   else if (currentLanguage == "Chinese") {
+                                       if (res.patternDescriptionEn.contains("decreasing", ignoreCase = true)) "递减等差数列"
+                                       else "等差数列"
+                                   } else res.patternDescriptionEn,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -142,6 +153,73 @@ fun PatternsScreen(
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
+
+                        // Animated Pop/Stagger Visualizer Row
+                        Text(
+                            text = if (currentLanguage == "Chinese") "数列项排布与公差：" else "Interactive Sequence & Common Differences:",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .padding(vertical = 12.dp)
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val parsedNums = rawInput.split(",").mapNotNull { it.trim().toIntOrNull() }
+                            parsedNums.forEachIndexed { idx, num ->
+                                var itemVisible by remember { mutableStateOf(false) }
+                                LaunchedEffect(rawInput) {
+                                    itemVisible = false
+                                    kotlinx.coroutines.delay(idx * 120L)
+                                    itemVisible = true
+                                }
+                                AnimatedVisibility(
+                                    visible = itemVisible,
+                                    enter = scaleIn(animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)) + fadeIn()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = num.toString(),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                
+                                if (idx < parsedNums.size - 1) {
+                                    val diff = parsedNums[idx + 1] - num
+                                    var diffVisible by remember { mutableStateOf(false) }
+                                    LaunchedEffect(rawInput) {
+                                        diffVisible = false
+                                        kotlinx.coroutines.delay(idx * 120L + 60L)
+                                        diffVisible = true
+                                    }
+                                    AnimatedVisibility(
+                                        visible = diffVisible,
+                                        enter = fadeIn() + slideInVertically(initialOffsetY = { -15 })
+                                    ) {
+                                        Text(
+                                            text = if (diff >= 0) " +$diff " else " $diff ",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                            modifier = Modifier.padding(horizontal = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
                         Text(
                             text = Localization.get("general_term", currentLanguage),
@@ -174,9 +252,27 @@ fun PatternsScreen(
                         )
 
                         res.steps.forEach { step ->
+                            val translatedStep = if (currentLanguage == "Chinese") {
+                                var s = step
+                                if (s.contains("Common difference", ignoreCase = true)) {
+                                    val d = s.substringAfter("d = ").trim()
+                                    "公差： d = $d"
+                                } else if (s.contains("First term", ignoreCase = true)) {
+                                    val a = s.substringAfter("a = ").trim()
+                                    "首项元素： a = $a"
+                                } else if (s.contains("Substitute into general formula", ignoreCase = true)) {
+                                    "代入等差通项公式： Tn = a + (n - 1)d"
+                                } else if (s.contains("Simplify", ignoreCase = true)) {
+                                    val f = s.substringAfter("simplify: ").trim()
+                                    "最简一次函数关系： Tn = $f"
+                                } else {
+                                    s
+                                }
+                            } else step
+
                             Row(modifier = Modifier.padding(vertical = 4.dp)) {
                                 Text("• ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text(step, style = MaterialTheme.typography.bodyMedium)
+                                Text(translatedStep, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
@@ -636,6 +732,7 @@ fun ThreeDShapesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
                             .padding(bottom = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -644,7 +741,7 @@ fun ThreeDShapesScreen(
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { selectedShape = pair.first },
-                                label = { Text(pair.second) },
+                                label = { Text(pair.second, maxLines = 1) },
                                 modifier = Modifier.testTag("chip_shape_${pair.first}")
                             )
                         }

@@ -1,7 +1,43 @@
 package com.example.ui.settings
 
+import android.content.Context
+import android.content.res.Configuration
+import java.util.Locale
+
 object Localization {
+    private var appContext: Context? = null
+
+    fun init(context: Context) {
+        this.appContext = context.applicationContext
+    }
+
     fun get(key: String, language: String): String {
+        val context = appContext
+        if (context != null) {
+            try {
+                // Determine the locale based on the selected language
+                val locale = when (language) {
+                    "Bahasa Melayu" -> Locale("ms")
+                    "French" -> Locale("fr")
+                    "German" -> Locale("de")
+                    "Russian" -> Locale("ru")
+                    "Japanese" -> Locale("ja")
+                    "Chinese" -> Locale("zh")
+                    else -> Locale("en")
+                }
+                
+                val config = Configuration(context.resources.configuration)
+                config.setLocale(locale)
+                val localizedContext = context.createConfigurationContext(config)
+                
+                val resId = localizedContext.resources.getIdentifier(key, "string", context.packageName)
+                if (resId != 0) {
+                    return localizedContext.getString(resId)
+                }
+            } catch (e: Exception) {
+                // Fallback to static mapping if anything fails
+            }
+        }
         val strings = translations[language] ?: translations["English"] ?: emptyMap()
         return strings[key] ?: translations["English"]?.get(key) ?: key
     }
@@ -164,6 +200,85 @@ object Localization {
             "s_val" to "Tinggi serong (s):",
             "student_tip" to "Tip Pelajar: Ingat bahawa dalam buku teks sekolah, garisan pecahan bermaksud bahagi (÷), dan pemboleh ubah bersebelahan seperti 'ab' bermaksud 'a didarab dengan b' (a × b).",
             "swipe_to_see" to "Leret karusel di bawah untuk melihat bagaimana setiap langkah memindahkan komponen merentasi tanda sama dengan (=)!"
+        ),
+        "Chinese" to mapOf(
+            "app_title" to "MathExpressive 数学实验室",
+            "subtitle" to "初二数学（Form 2）直观学习",
+            "search_lang" to "搜索语言...",
+            "app_lang" to "应用语言",
+            "appearance" to "外观设置",
+            "theme_sec" to "主题",
+            "enable_dynamic" to "启用动态主题",
+            "dark_theme" to "深色模式",
+            "disable_blurs" to "禁用模糊效果",
+            "disable_blurs_desc" to "全局禁用模糊特效",
+            "use_sys_font" to "使用系统字体",
+            "use_sys_font_desc" to "使用设备内置字体而非应用自带字体",
+            "off" to "关闭",
+            "on" to "开启",
+            "search_placeholder" to "搜索语言...",
+            "solved_subject" to "求得公式主项：",
+            "steps_title" to "公式变形步骤",
+            "select_subject" to "选择要孤立的变量（公式主项）：",
+            "back" to "返回",
+            "welcome" to "选择数学主题",
+            "topic_patterns" to "规律与数列 (Patterns & Sequences)",
+            "topic_algebra" to "代数式与公式 (Algebraic Formulae)",
+            "topic_polygons" to "多边形 (Polygons)",
+            "topic_circles" to "圆 (Circles)",
+            "topic_shapes" to "三维几何立体 (3D Shapes)",
+            "solve" to "求解",
+            "calculate" to "计算",
+            "result" to "计算结果",
+            "explanation" to "详细解析",
+            "hcf_lcm" to "求最大公因数 (HCF) 和最小公倍数 (LCM)",
+            "expansion" to "整式展开 (Expansion)",
+            "factorisation" to "因式分解 (Factorisation)",
+            "subject_title" to "公式主项变换",
+            "pola_desc" to "分析数字序列，探索规律并轻松写出第 n 项的通项公式。",
+            "formulae_desc" to "逐步变换公式主项、展开多项式或进行二次三项式因式分解。",
+            "polygons_desc" to "探索正多边形的内角和外角，通过直观图示计算角度之和。",
+            "circles_desc" to "通过直观的圆形图表计算弦长、周长、面积、弧长和扇形面积。",
+            "shapes_desc" to "计算三维几何体（圆柱、圆锥、球体）的表面积和体积，并查看其平面展开图。",
+            "enter_seq" to "输入数字序列（用逗号隔开，例如 5, 12, 19, 26）：",
+            "pattern_is" to "检测到规律：",
+            "general_term" to "通项公式 (Tn)：",
+            "seq_error" to "请输入至少3个有效的数字且用逗号隔开。",
+            "factor_title" to "二次多项式因式分解",
+            "factor_desc" to "使用十字相乘法（Cross Multiplication）分解 ax² + bx + c",
+            "expand_title" to "整式展开求解器",
+            "expand_desc" to "第一步到最后一步详细展开 (ax + b)(cx + d)",
+            "hcf_title" to "HCF & LCM 求解器",
+            "hcf_desc" to "采用短除法 / 重复相除法（Repeated Division）",
+            "num_list_prompt" to "输入正整数（用逗号隔开，例如 12, 18, 30）：",
+            "divide_step" to "除以",
+            "polygon_sides" to "边数 (n 边形)：",
+            "interior_sum" to "内角和：",
+            "each_interior" to "每个内角：",
+            "each_exterior" to "每个外角：",
+            "polygon_math_step1" to "多边形内角和公式：(n - 2) × 180°",
+            "circle_radius" to "圆半径 (r)：",
+            "circle_angle" to "圆心角 (θ°)：",
+            "circumference" to "圆周长 (2 × π × r)：",
+            "circle_area" to "圆面积 (π × r²)：",
+            "arc_length" to "弧长 (θ/360 × 2 × π × r)：",
+            "sector_area" to "扇形面积 (θ/360 × π × r²)：",
+            "shape_type" to "选择三维立体：",
+            "volume" to "体积",
+            "surface_area" to "表面积",
+            "nets_visualizer" to "展开图预览",
+            "prism" to "三棱柱",
+            "pyramid" to "四棱锥",
+            "cylinder" to "圆柱体",
+            "cone" to "圆锥体",
+            "sphere" to "球体",
+            "h_val" to "高 (h)：",
+            "r_val" to "半径 (r)：",
+            "w_val" to "宽 (w)：",
+            "l_val" to "长 (l)：",
+            "s_val" to "母线长/斜高 (s)：",
+            "student_tip" to "学习小贴士：请记住，在教科书和公式表中，分度线代表除法（÷），而如 'ab' 的连写变量表示 'a 乘以 b'（a × b）。",
+            "swipe_to_see" to "左右滑动下方的卡片，查看每个变换步骤如何将项移过等号（=）！"
         )
     )
 }

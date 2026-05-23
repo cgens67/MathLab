@@ -348,7 +348,12 @@ fun ExpansionPanel(currentLanguage: String) {
         }
 
         // Show Result
-        expandedResult?.let { result ->
+        AnimatedVisibility(
+            visible = expandedResult != null,
+            enter = fadeIn() + expandVertically() + slideInVertically(initialOffsetY = { 40 }),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            val result = expandedResult ?: return@AnimatedVisibility
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 shape = RoundedCornerShape(24.dp),
@@ -466,7 +471,12 @@ fun FactorisationPanel(currentLanguage: String) {
         }
 
         // Display results + visually drawn cross multiplication table matrix
-        factorResult?.let { result ->
+        AnimatedVisibility(
+            visible = factorResult != null,
+            enter = fadeIn() + expandVertically() + slideInVertically(initialOffsetY = { 40 }),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            val result = factorResult ?: return@AnimatedVisibility
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 shape = RoundedCornerShape(24.dp),

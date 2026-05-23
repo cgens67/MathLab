@@ -16,6 +16,9 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,6 +104,7 @@ fun LanguageScreen(
                     val flagSymbol = when (lang.countryCode) {
                         "GB" -> "🇬🇧"
                         "MY" -> "🇲🇾"
+                        "CN" -> "🇨🇳"
                         "FR" -> "🇫🇷"
                         "DE" -> "🇩🇪"
                         "IT" -> "🇮🇹"
@@ -297,62 +301,66 @@ fun AppearanceScreen(
             }
 
             // SECTION 1.5: THEME PRESETS SELECTOR (NEW!)
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    ),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = if (currentLanguage == "English") "Theme Presets" else "Pilihan Tema Warna",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        val presets = listOf(
-                            Triple("Natural Forest", "Forest", Color(0xFF2E7D32)),
-                            Triple("Forest Emerald", "Emerald", Color(0xFF00695C)),
-                            Triple("Royal Ocean", "Ocean", Color(0xFF1565C0)),
-                            Triple("Sunset Copper", "Copper", Color(0xFFD84315))
-                        )
+            if (!enableDynamic) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = if (currentLanguage == "English") "Theme Presets" 
+                                       else if (currentLanguage == "Chinese") "主题预设色"
+                                       else "Pilihan Tema Warna",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            val presets = listOf(
+                                Triple("Natural Forest", "Forest", Color(0xFF2E7D32)),
+                                Triple("Forest Emerald", "Emerald", Color(0xFF00695C)),
+                                Triple("Royal Ocean", "Ocean", Color(0xFF1565C0)),
+                                Triple("Sunset Copper", "Copper", Color(0xFFD84315))
+                            )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            presets.forEach { (rawName, label, colorIndicator) ->
-                                val isSelected = themePreset == rawName
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primaryContainer 
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                        )
-                                        .clickable { SettingsManager.setThemePreset(context, rawName) }
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .clip(CircleShape)
-                                                .background(colorIndicator)
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = label, 
-                                            fontSize = 11.sp, 
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                presets.forEach { (rawName, label, colorIndicator) ->
+                                    val isSelected = themePreset == rawName
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                            )
+                                            .clickable { SettingsManager.setThemePreset(context, rawName) }
+                                            .padding(8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .clip(CircleShape)
+                                                    .background(colorIndicator)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = label, 
+                                                fontSize = 11.sp, 
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -584,6 +592,300 @@ fun SettingsSwitchRow(
                 onCheckedChange = onCheckedChange,
                 modifier = Modifier.testTag(testTag)
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    currentLanguage: String,
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToAppearance: () -> Unit,
+    onNavigateToAbout: () -> Unit,
+    onShowSupport: () -> Unit,
+    onBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (currentLanguage == "English") "Settings" else "Tetapan") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("settings_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = Localization.get("back", currentLanguage)
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Group 1: General
+            item {
+                Text(
+                    text = if (currentLanguage == "English") "GENERAL" else "UMUM",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            // Language Settings Option
+            item {
+                SettingsOptionCard(
+                    title = if (currentLanguage == "English") "Language" else "Bahasa",
+                    subtitle = currentLanguage,
+                    icon = Icons.Default.Search, // Utilizing existing imported Search icon for language discovery
+                    onClick = onNavigateToLanguage,
+                    testTag = "settings_lang_option"
+                )
+            }
+
+            // Group 2: Layout & Themes
+            item {
+                Text(
+                    text = if (currentLanguage == "English") "APPEARANCE" else "RUPA PARAS",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            // Appearance settings option
+            item {
+                SettingsOptionCard(
+                    title = if (currentLanguage == "English") "Appearance & Customization" else "Rupa Paras & Ubah Suai",
+                    subtitle = if (currentLanguage == "English") "Preset colors, font size, dark mode" else "Tema warna, saiz tulisan, mod gelap",
+                    icon = Icons.Default.Palette,
+                    onClick = onNavigateToAppearance,
+                    testTag = "settings_appearance_option"
+                )
+            }
+
+            // Group 3: Support & About
+            item {
+                Text(
+                    text = if (currentLanguage == "English") "ABOUT & SUPPORT" else "MENGENAI & SOKONGAN",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            // Support Development Option
+            item {
+                SettingsOptionCard(
+                    title = if (currentLanguage == "English") "Support Development ❤️" else "Sokong Pembangunan ❤️",
+                    subtitle = if (currentLanguage == "English") "Help keep this project ad-free and open source" else "Bantu kekalkan projek ini bebas iklan & sumber terbuka",
+                    icon = Icons.Default.Favorite, // We already use Favorite
+                    iconColor = Color(0xFFE91E63),
+                    onClick = onShowSupport,
+                    testTag = "settings_support_option"
+                )
+            }
+
+            // About Screen Option
+            item {
+                SettingsOptionCard(
+                    title = if (currentLanguage == "English") "About MathLab T2" else "Perihal MathLab T2",
+                    subtitle = if (currentLanguage == "English") "Credits, curriculum standards & legal" else "Penghargaan, standard kurikulum & terma",
+                    icon = Icons.Default.Info,
+                    onClick = onNavigateToAbout,
+                    testTag = "settings_about_option"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsOptionCard(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconColor: Color = MaterialTheme.colorScheme.primary,
+    onClick: () -> Unit,
+    testTag: String
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .testTag(testTag)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutScreen(
+    currentLanguage: String,
+    onBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (currentLanguage == "English") "About MathLab" else "Perihal MathLab") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = Localization.get("back", currentLanguage)
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Surface(
+                modifier = Modifier.size(100.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "MathLab T2",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Version 1.2.0",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (currentLanguage == "English") "Curriculum Standard" else "Standard Kurikulum",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (currentLanguage == "English")
+                            "Specifically designed according to the Malaysia KSSM Mathematics Form 2 Syllabus. Every tool, color, and interactive step corresponds to textbook pedagogical recommendations."
+                            else "Direka khas mengikut Sukatan Pelajaran Matematik KSSM Tingkatan 2 Malaysia. Setiap langkah kerja, rajah interaktif, dan animasi ditala mengikut panduan pedagogi buku teks.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (currentLanguage == "English") "Philosophy" else "Falsafah Pembangunan",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (currentLanguage == "English")
+                            "Education must be accessible, interactive, and beautifully expressive. MathLab is and will always remain completely free of ads, tracking, or platform paywalls so that every learner can thrive."
+                            else "Pendidikan sepatutnya mudah diakses, interaktif, dan ekspresif. MathLab adalah dan akan sentiasa kekal bebas daripada iklan, penjejakan, mahupun sekatan bayaran.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
         }
     }
 }

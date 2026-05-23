@@ -8,6 +8,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ class MainActivity : ComponentActivity() {
     
     // Initialize preferences dynamically from storage
     SettingsManager.init(applicationContext)
+    com.example.ui.settings.Localization.init(applicationContext)
 
     enableEdgeToEdge()
     setContent {
@@ -38,6 +41,7 @@ class MainActivity : ComponentActivity() {
       // Navigation stack utilizing mutableStateListOf for high responsiveness
       val navigationStack = remember { mutableStateListOf("dashboard") }
       val currentScreen = navigationStack.lastOrNull() ?: "dashboard"
+      var showSupportModal by remember { mutableStateOf(false) }
 
       MyApplicationTheme(
           darkTheme = darkTheme,
@@ -46,12 +50,14 @@ class MainActivity : ComponentActivity() {
           fontSizeScale = fontSizeScale,
           shapeRoundedness = shapeRoundedness
       ) {
-          Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+          androidx.compose.foundation.layout.Box(
+              modifier = Modifier
+                  .fillMaxSize()
+                  .background(MaterialTheme.colorScheme.background)
+          ) {
               AnimatedContent(
                   targetState = currentScreen,
-                  modifier = Modifier
-                      .fillMaxSize()
-                      .padding(innerPadding),
+                  modifier = Modifier.fillMaxSize(),
                   transitionSpec = {
                       fadeIn(animationSpec = spring(stiffness = 250f)) + slideInHorizontally(
                           animationSpec = spring(stiffness = 250f),
@@ -71,11 +77,40 @@ class MainActivity : ComponentActivity() {
                               onNavigateToTopic = { topic ->
                                   navigationStack.add(topic)
                               },
+                              onNavigateToSettings = {
+                                  navigationStack.add("settings")
+                              }
+                          )
+                      }
+                      "settings" -> {
+                          SettingsScreen(
+                              currentLanguage = currentLanguage,
                               onNavigateToLanguage = {
                                   navigationStack.add("language")
                               },
                               onNavigateToAppearance = {
                                   navigationStack.add("appearance")
+                              },
+                              onNavigateToAbout = {
+                                  navigationStack.add("about")
+                              },
+                              onShowSupport = {
+                                  showSupportModal = true
+                              },
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
+                              }
+                          )
+                      }
+                      "about" -> {
+                          AboutScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeLast()
+                                  }
                               }
                           )
                       }
@@ -165,6 +200,9 @@ class MainActivity : ComponentActivity() {
                           )
                       }
                   }
+              }
+              if (showSupportModal) {
+                  com.example.ui.components.SupportDevelopmentModal(onDismiss = { showSupportModal = false })
               }
           }
       }

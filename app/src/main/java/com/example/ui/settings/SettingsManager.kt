@@ -23,6 +23,7 @@ object SettingsManager {
     val LANGUAGES = listOf(
         LanguageItem("English", "English", "GB"),
         LanguageItem("Bahasa Melayu", "Malay", "MY"),
+        LanguageItem("Chinese", "简体中文", "CN"),
         LanguageItem("French", "Français", "FR"),
         LanguageItem("German", "Deutsch", "DE"),
         LanguageItem("Italian", "Italiano", "IT"),
