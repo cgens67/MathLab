@@ -199,15 +199,19 @@ object Tingkatan2MathSuite {
     }
 
     private fun findFactorsOf(num: Int): List<Int> {
-        val result = mutableListOf<Int>()
+        val result = mutableSetOf<Int>()
         if (num == 0) return listOf(0)
         val absNum = kotlin.math.abs(num)
-        for (i in -absNum..absNum) {
-            if (i != 0 && absNum % i == 0) {
+        val limit = kotlin.math.sqrt(absNum.toDouble()).toInt()
+        for (i in 1..limit) {
+            if (absNum % i == 0) {
                 result.add(i)
+                result.add(-i)
+                result.add(absNum / i)
+                result.add(-(absNum / i))
             }
         }
-        return result
+        return result.sorted()
     }
 
 
@@ -225,6 +229,32 @@ object Tingkatan2MathSuite {
         val steps: List<String>
     )
 
+    private fun findSmallestPrimeFactor(n: Int): Int {
+        if (n < 2) return 1
+        if (n % 2 == 0) return 2
+        if (n % 3 == 0) return 3
+        var i = 5
+        while (i * i <= n) {
+            if (n % i == 0) return i
+            if (n % (i + 2) == 0) return i + 2
+            i += 6
+        }
+        return n
+    }
+
+    private fun findSmallestPrimeFactorAtLeast(n: Int, limit: Int): Int {
+        if (n < limit) return limit
+        var p = findSmallestPrimeFactor(n)
+        if (p >= limit) return p
+        var temp = n
+        while (temp > 1) {
+            p = findSmallestPrimeFactor(temp)
+            if (p >= limit) return p
+            temp /= p
+        }
+        return n.coerceAtLeast(limit)
+    }
+
     fun solveHcfLcm(nums: List<Int>): HcfLcmResult {
         val numbers = nums.filter { it > 0 }.toMutableList()
         val steps = mutableListOf<String>()
@@ -237,7 +267,6 @@ object Tingkatan2MathSuite {
         }
 
         steps.add("We use the Repeated Division Method (Kaedah Pembahagian Berulang):")
-        val original = numbers.toList()
         val divisionRows = mutableListOf<DivisionRow>()
 
         // 1. Calculate HCF / FSTB
@@ -245,16 +274,25 @@ object Tingkatan2MathSuite {
         var currentNumsHcf = numbers.toIntArray()
         var hcfValue = 1
         var prime = 2
-        while (prime <= currentNumsHcf.maxOrNull() ?: 1) {
+        while (prime <= (currentNumsHcf.maxOrNull() ?: 1)) {
             val allDivisible = currentNumsHcf.all { it % prime == 0 }
             if (allDivisible) {
                 divisionRows.add(DivisionRow(prime, currentNumsHcf.toList(), true))
                 currentNumsHcf = currentNumsHcf.map { it / prime }.toIntArray()
                 hcfValue *= prime
                 steps.add("Stage (HCF): All numbers in group [${currentNumsHcf.joinToString(", ")}] are divisible by common factor: $prime.")
-                // stay on same prime to check again
             } else {
-                prime++
+                val minActive = currentNumsHcf.filter { it > 1 }.minOrNull()
+                if (minActive == null) {
+                    break
+                } else {
+                    val nextPF = findSmallestPrimeFactorAtLeast(minActive, prime)
+                    if (nextPF <= prime) {
+                        prime++
+                    } else {
+                        prime = nextPF
+                    }
+                }
             }
         }
         steps.add("HCF (FSTB) result is the product of all COMMON divisors: HCF = $hcfValue")
@@ -276,11 +314,20 @@ object Tingkatan2MathSuite {
                 lcmDivisionRows.add(DivisionRow(divisor, beforeDivision, isCommon))
                 lcmValue *= divisor
             } else {
-                divisor++
+                val activeNums = lcmNums.filter { it > 1 }
+                var nextDivisorCandidate = divisor + 1
+                if (activeNums.isNotEmpty()) {
+                    val minPF = activeNums.map { findSmallestPrimeFactor(it) }.minOrNull() ?: (divisor + 1)
+                    nextDivisorCandidate = minPF
+                }
+                if (nextDivisorCandidate <= divisor) {
+                    divisor++
+                } else {
+                    divisor = nextDivisorCandidate
+                }
             }
         }
         // Combine rows for displaying the repeated division
-        // We can just show standard division steps until all numbers reduce to 1 for completeness
         steps.add("LCM (GSTK) result is the product of ALL divisors used to reduce all numbers to 1:")
         steps.add("LCM = " + lcmDivisionRows.map { it.divisor }.joinToString(" × ") + " = $lcmValue")
 

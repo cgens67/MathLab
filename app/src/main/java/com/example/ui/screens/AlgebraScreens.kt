@@ -734,6 +734,7 @@ fun FactorisationPanel(currentLanguage: String) {
 fun HcfLcmPanel(currentLanguage: String) {
     var rawInput by remember { mutableStateOf("12, 18, 30") }
     var calcResult by remember { mutableStateOf<Tingkatan2MathSuite.HcfLcmResult?>(null) }
+    var validationError by remember { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
 
     Column(
@@ -765,17 +766,45 @@ fun HcfLcmPanel(currentLanguage: String) {
 
                 OutlinedTextField(
                     value = rawInput,
-                    onValueChange = { rawInput = it },
+                    onValueChange = { 
+                        rawInput = it 
+                        validationError = null
+                    },
                     placeholder = { Text("e.g. 12, 18, 30") },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth().testTag("hcf_raw_input")
                 )
 
+                if (validationError != null) {
+                    Text(
+                        text = validationError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp).testTag("hcf_validation_error")
+                    )
+                }
+
                 Button(
                     onClick = {
                         val parsed = rawInput.split(",")
                             .mapNotNull { it.trim().toIntOrNull() }
-                        if (parsed.isNotEmpty()) {
+                        if (parsed.isEmpty()) {
+                            validationError = if (currentLanguage == "English") "Please enter some numbers (e.g. 12, 18, 30)"
+                                             else if (currentLanguage == "Chinese") "请输入一些数字（例如 12, 18, 30）"
+                                             else "Sila masukkan beberapa nombor (cth. 12, 18, 30)"
+                            calcResult = null
+                        } else if (parsed.any { it <= 0 }) {
+                            validationError = if (currentLanguage == "English") "Please enter positive numbers greater than 0 only."
+                                             else if (currentLanguage == "Chinese") "仅支持大于0的正整数。"
+                                             else "Sila masukkan nombor positif sahaja."
+                            calcResult = null
+                        } else if (parsed.any { it > 10000 }) {
+                            validationError = if (currentLanguage == "English") "For performance, numbers must be 10,000 or less."
+                                             else if (currentLanguage == "Chinese") "为了计算性能，数字不能超过 10,000。"
+                                             else "Untuk kelancaran, nombor mestilah 10,000 atau ke bawah."
+                            calcResult = null
+                        } else {
+                            validationError = null
                             calcResult = Tingkatan2MathSuite.solveHcfLcm(parsed)
                         }
                     },
