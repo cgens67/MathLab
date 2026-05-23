@@ -12,7 +12,8 @@ object Tingkatan2MathSuite {
         val patternDescriptionEn: String,
         val patternDescriptionMs: String,
         val formula: String,
-        val steps: List<String>
+        val stepsEn: List<String>,
+        val stepsMs: List<String>
     )
 
     fun solveSequence(numbers: List<Int>): SequenceResult {
@@ -20,7 +21,8 @@ object Tingkatan2MathSuite {
             return SequenceResult(
                 0, 0,
                 "Need 3+ terms", "Perlu 3+ sebutan", "",
-                listOf("Please provide at least 3 numbers to spot the pattern.")
+                listOf("Please provide at least 3 numbers to spot the pattern."),
+                listOf("Sila masukkan sekurang-kurangnya 3 nombor untuk menentukan pola.")
             )
         }
 
@@ -29,15 +31,21 @@ object Tingkatan2MathSuite {
         val diff2 = numbers[2] - numbers[1]
 
         val isArithmetic = diff1 == diff2
-        val steps = mutableListOf<String>()
+        val stepsEn = mutableListOf<String>()
+        val stepsMs = mutableListOf<String>()
 
         return if (isArithmetic) {
             val dString = if (diff1 >= 0) "+$diff1" else "$diff1"
             val descEn = "Arithmetic Sequence: Add $diff1 to the previous term (Common difference: $diff1)"
             val descMs = "Jujukan Aritmetik: Tambah $diff1 kepada sebutan sebelumnya (Beza sepunya: $diff1)"
-            steps.add("Step 1: Subtract consecutive terms: T₂ − T₁ = ${numbers[1]} − $first = $diff1")
-            steps.add("Step 2: Check next pair: T₃ − T₂ = ${numbers[2]} − ${numbers[1]} = $diff1")
-            steps.add("Step 3: Confirm constant difference: d = $diff1 (Common difference / Beza sepunya confirmed).")
+            
+            stepsEn.add("Step 1: Subtract consecutive terms: T₂ − T₁ = ${numbers[1]} − $first = $diff1")
+            stepsEn.add("Step 2: Check next pair: T₃ − T₂ = ${numbers[2]} − ${numbers[1]} = $diff1")
+            stepsEn.add("Step 3: Confirm constant difference: d = $diff1 (Common difference confirmed).")
+
+            stepsMs.add("Langkah 1: Tolak sebutan berturutan: T₂ − T₁ = ${numbers[1]} − $first = $diff1")
+            stepsMs.add("Langkah 2: Periksa pasangan seterusnya: T₃ − T₂ = ${numbers[2]} − ${numbers[1]} = $diff1")
+            stepsMs.add("Langkah 3: Sahkan beza sepunya: d = $diff1 (Beza sepunya disahkan).")
 
             val formula = if (diff1 == 0) {
                 "T_n = $first"
@@ -47,13 +55,19 @@ object Tingkatan2MathSuite {
                 "T_n = ${diff1}n${if (constantPart != 0) sign else ""}"
             }
 
-            steps.add("Step 4: Formulate the general term using school formula: T_n = a + (n − 1)d")
-            steps.add("Substitute start term a = $first and a common difference d = $diff1:")
-            steps.add("T_n = $first + (n − 1) × ($diff1)")
-            steps.add("Simplify: T_n = $first + $diff1 n − $diff1")
-            steps.add("Final Form: $formula (For n = 1, 2, 3...)")
+            stepsEn.add("Step 4: Formulate the general term using school formula: T_n = a + (n − 1)d")
+            stepsEn.add("Substitute start term a = $first and a common difference d = $diff1:")
+            stepsEn.add("T_n = $first + (n − 1) × ($diff1)")
+            stepsEn.add("Simplify: T_n = $first + $diff1 n − $diff1")
+            stepsEn.add("Final Form: $formula (For n = 1, 2, 3...)")
 
-            SequenceResult(diff1, first, descEn, descMs, formula, steps)
+            stepsMs.add("Langkah 4: Bina formula sebutan am menggunakan rumus sekolah: T_n = a + (n − 1)d")
+            stepsMs.add("Gantikan sebutan pertama a = $first dan beza sepunya d = $diff1:")
+            stepsMs.add("T_n = $first + (n − 1) × ($diff1)")
+            stepsMs.add("Permudahkan: T_n = $first + $diff1 n − $diff1")
+            stepsMs.add("Bentuk Akhir: $formula (Bagi n = 1, 2, 3...)")
+
+            SequenceResult(diff1, first, descEn, descMs, formula, stepsEn, stepsMs)
         } else {
             // Check geometric progression ratio
             val ratio1 = if (numbers[0] != 0) numbers[1].toDouble() / numbers[0] else 0.0
@@ -62,17 +76,29 @@ object Tingkatan2MathSuite {
                 val rFloat = ratio1
                 val descEn = "Geometric Sequence: Multiply by $rFloat (Common ratio: $rFloat)"
                 val descMs = "Jujukan Geometri: Darab dengan $rFloat (Nisbah sepunya: $rFloat)"
-                steps.add("Step 1: Check ratios of consecutive terms: T₂ ÷ T₁ = ${numbers[1]} ÷ $first = $ratio1")
-                steps.add("Step 2: Check next ratio: T₃ ÷ T₂ = ${numbers[2]} ÷ ${numbers[1]} = $ratio1")
+                
+                stepsEn.add("Step 1: Check ratios of consecutive terms: T₂ ÷ T₁ = ${numbers[1]} ÷ $first = $ratio1")
+                stepsEn.add("Step 2: Check next ratio: T₃ ÷ T₂ = ${numbers[2]} ÷ ${numbers[1]} = $ratio1")
                 val formula = "T_n = $first × ($ratio1)^(n−1)"
-                steps.add("Step 3: Formulate general term T_n = a × r^(n − 1): $formula")
-                SequenceResult(ratio1.toInt(), first, descEn, descMs, formula, steps)
+                stepsEn.add("Step 3: Formulate general term T_n = a × r^(n − 1): $formula")
+
+                stepsMs.add("Langkah 1: Periksa nisbah sebutan berturutan: T₂ ÷ T₁ = ${numbers[1]} ÷ $first = $ratio1")
+                stepsMs.add("Langkah 2: Periksa nisbah seterusnya: T₃ ÷ T₂ = ${numbers[2]} ÷ ${numbers[1]} = $ratio1")
+                val formulaMs = "T_n = $first × ($ratio1)^(n−1)"
+                stepsMs.add("Langkah 3: Bina formula sebutan am T_n = a × r^(n − 1): $formulaMs")
+
+                SequenceResult(ratio1.toInt(), first, descEn, descMs, formula, stepsEn, stepsMs)
             } else {
                 val descEn = "Non-linear Custom Sequence: Pattern is complex or irregular."
                 val descMs = "Jujukan Khas Bukan Linear: Pola yang kompleks atau tidak sekata."
-                steps.add("Check differences: ${numbers[1]} − $first = $diff1, ${numbers[2]} − ${numbers[1]} = $diff2. Not constant.")
-                steps.add("Pattern is not a simple linear sequence. Standard form formula T_n is complex.")
-                SequenceResult(0, first, descEn, descMs, "Custom Sequence", steps)
+                
+                stepsEn.add("Check differences: ${numbers[1]} − $first = $diff1, ${numbers[2]} − ${numbers[1]} = $diff2. Not constant.")
+                stepsEn.add("Pattern is not a simple linear sequence. Standard form formula T_n is complex.")
+
+                stepsMs.add("Periksa beza sebutan: ${numbers[1]} − $first = $diff1, ${numbers[2]} − ${numbers[1]} = $diff2. Tidak malar.")
+                stepsMs.add("Pola ini bukan jujukan linear ringkas. Sebutan am T_n adalah kompleks.")
+
+                SequenceResult(0, first, descEn, descMs, "Custom Sequence", stepsEn, stepsMs)
             }
         }
     }
@@ -386,31 +412,31 @@ object Tingkatan2MathSuite {
         val stepsMs: List<String>
     )
 
-    fun solveCircle(radius: Double, thetaDegrees: Double): CircleResult {
+    fun solveCircle(radius: Double, thetaDegrees: Double, piType: String = "22/7"): CircleResult {
         // Circumference = 2 * PI * r
         // Area = PI * r^2
         // Arc Length = (theta / 360) * 2 * PI * r
         // Sector Area = (theta / 360) * PI * r^2
-        val piToUse = 22.0 / 7.0 // standard Malaysian school curriculum pi approximation!
+        val piToUse = if (piType == "3.142") 3.142 else 22.0 / 7.0 // standard school curriculum pi approximation!
         val circumference = 2 * piToUse * radius
         val area = piToUse * radius * radius
         val arcValue = (thetaDegrees / 360.0) * circumference
         val sectorValue = (thetaDegrees / 360.0) * area
 
         val stepsEn = listOf(
-            "Note: Using Malaysia school-standard π ≈ 22 ÷ 7 for fractional calculations.",
-            "1. Circumference = 2 × π × r = 2 × (22 ÷ 7) × $radius = ${circumference.format(3)}",
-            "2. Circle Area = π × r² = (22 ÷ 7) × $radius × $radius = ${area.format(3)}",
-            "3. Arc Length (length of chord's boundary) subtending $thetaDegrees° = (θ ÷ 360) × (2 × π × r)",
+            "Note: Using textbook-standard π = $piType.",
+            "1. Circumference = 2 × π × r = 2 × $piType × $radius = ${circumference.format(3)}",
+            "2. Circle Area = π × r² = $piType × $radius × $radius = ${area.format(3)}",
+            "3. Arc Length subtending $thetaDegrees° = (θ ÷ 360) × (2 × π × r)",
             "   Arc Length = ($thetaDegrees ÷ 360) × ${circumference.format(3)} = ${arcValue.format(3)}",
             "4. Sector Area (region covered by θ) = (θ ÷ 360) × (π × r²)",
             "   Sector Area = ($thetaDegrees ÷ 360) × ${area.format(3)} = ${sectorValue.format(3)}"
         )
 
         val stepsMs = listOf(
-            "Nota: Menggunakan standard sekolah Malaysia π ≈ 22 ÷ 7 untuk pengiraan pecahan.",
-            "1. Lilitan Bulatan = 2 × π × j = 2 × (22 ÷ 7) × $radius = ${circumference.format(3)}",
-            "2. Luas Bulatan = π × j² = (22 ÷ 7) × $radius × $radius = ${area.format(3)}",
+            "Nota: Menggunakan standard buku teks π = $piType.",
+            "1. Lilitan Bulatan = 2 × π × j = 2 × $piType × $radius = ${circumference.format(3)}",
+            "2. Luas Bulatan = π × j² = $piType × $radius × $radius = ${area.format(3)}",
             "3. Panjang Lengkok (mencakup sudut $thetaDegrees°) = (θ ÷ 360) × (2 × π × j)",
             "   Panjang Lengkok = ($thetaDegrees ÷ 360) × ${circumference.format(3)} = ${arcValue.format(3)}",
             "4. Luas Sektor (kawasan dilitupi sudut θ) = (θ ÷ 360) × (π × j²)",
@@ -431,7 +457,7 @@ object Tingkatan2MathSuite {
         val stepsMs: List<String>
     )
 
-    fun solve3D(shape: String, params: Map<String, Double>): Shape3DResult {
+    fun solve3D(shape: String, params: Map<String, Double>, piType: String = "22/7"): Shape3DResult {
         // keys possible: h (height), r (radius), l (length), w (width), s (slant height)
         val h = params["h"] ?: 0.0
         val r = params["r"] ?: 0.0
@@ -439,7 +465,7 @@ object Tingkatan2MathSuite {
         val w = params["w"] ?: 0.0
         val s = params["s"] ?: 0.0
 
-        val piToUse = 22.0 / 7.0
+        val piToUse = if (piType == "3.142") 3.142 else 22.0 / 7.0
         val stepsEn = mutableListOf<String>()
         val stepsMs = mutableListOf<String>()
         var area = 0.0

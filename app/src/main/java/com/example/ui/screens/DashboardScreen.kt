@@ -197,6 +197,23 @@ fun DashboardScreen(
                         testTag = "topic_shapes"
                     )
                 }
+
+                // Grid 6: Textbook Challenge Quiz (spans full 2 columns for perfect symmetry)
+                item(span = { GridItemSpan(2) }) {
+                    FullWidthTopicCard(
+                        title = if (currentLanguage == "English") "Textbook Challenge Quiz"
+                                else if (currentLanguage == "Chinese") "课本互动挑战测试"
+                                else "Kuiz Cabaran Buku Teks",
+                        description = if (currentLanguage == "English") "Test your skills on sequence formula, fraction algebra, circles, LCM medicine schedules and 3D volumes!"
+                                      else if (currentLanguage == "Chinese") "测试您的数列公式、分数代数、圆周、倍数药物日程表和3D几何体积知识！"
+                                      else "Uji kemahiran anda dalam formula jujukan, algebra pecahan, bulatan, jadual GSTK ubat, dan isipadu 3D!",
+                        icon = Icons.Default.AutoAwesome,
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        onClick = { onNavigateToTopic("quiz") },
+                        testTag = "topic_quiz"
+                    )
+                }
             }
         }
     }

@@ -325,7 +325,8 @@ fun SequenceSolverTab(currentLanguage: String) {
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
 
-                    res.steps.forEach { step ->
+                    val stepsToShow = if (currentLanguage == "Bahasa Melayu") res.stepsMs else res.stepsEn
+                    stepsToShow.forEach { step ->
                         val translatedStep = if (currentLanguage == "Chinese") {
                             var s = step
                             if (s.contains("Common difference", ignoreCase = true)) {
@@ -950,8 +951,9 @@ fun CirclesScreen(
 ) {
     var radius by remember { mutableStateOf(7.0) } // School standard radius division compatible with 7
     var angle by remember { mutableStateOf(90f) }   // default quarter quadrant (90 degrees)
+    var piType by remember { mutableStateOf("22/7") }
 
-    val circleResult = remember(radius, angle) { Tingkatan2MathSuite.solveCircle(radius, angle.toDouble()) }
+    val circleResult = remember(radius, angle, piType) { Tingkatan2MathSuite.solveCircle(radius, angle.toDouble(), piType) }
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -1044,6 +1046,86 @@ fun CirclesScreen(
                         valueRange = 10f..360f,
                         modifier = Modifier.testTag("circle_angle_slider")
                     )
+                }
+            }
+
+            // Pi Selector Card
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
+                ),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(24.dp)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (currentLanguage == "English") "Selected Pi (π) Value:"
+                                   else if (currentLanguage == "Chinese") "选用圆周率 (π) 值："
+                                   else "Pilihan Nilai Pi (π):",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = if (piType == "22/7") "π ≈ 22/7" else "π ≈ 3.142",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = if (currentLanguage == "English") "School questions specify whether to use 22/7 (fractional) or 3.142 (decimal). Choose to match your textbook:"
+                               else if (currentLanguage == "Chinese") "学校题目通常会指定使用 22/7 或 3.142，请选择与您教科书题目匹配的值："
+                               else "Soalan sekolah menentukan sama ada ingin menggunakan 22/7 atau 3.142. Pilih untuk dipadankan:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { piType = "22/7" },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (piType == "22/7") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "22 / 7",
+                                color = if (piType == "22/7") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Button(
+                            onClick = { piType = "3.142" },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (piType == "3.142") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "3.142",
+                                color = if (piType == "3.142") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
@@ -1152,8 +1234,10 @@ fun ThreeDShapesScreen(
         "s" to sVal
     )
 
-    val shapeResult = remember(selectedShape, hVal, rVal, wVal, lVal, sVal) {
-        Tingkatan2MathSuite.solve3D(selectedShape, scoreParams)
+    var piType by remember { mutableStateOf("22/7") }
+
+    val shapeResult = remember(selectedShape, hVal, rVal, wVal, lVal, sVal, piType) {
+        Tingkatan2MathSuite.solve3D(selectedShape, scoreParams, piType)
     }
 
     val scrollState = rememberScrollState()
@@ -1241,7 +1325,9 @@ fun ThreeDShapesScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Dimensi / Dimensions Parameters:",
+                        text = if (currentLanguage == "English") "Dimensions Parameters:"
+                               else if (currentLanguage == "Chinese") "尺寸维度参数："
+                               else "Parameter Dimensi:",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -1303,6 +1389,86 @@ fun ThreeDShapesScreen(
                             steps = 14,
                             modifier = Modifier.testTag("shape_slider_l")
                         )
+                    }
+                }
+            }
+
+            // Pi Selector Card (3D Geometry)
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
+                ),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth().border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(24.dp)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (currentLanguage == "English") "Selected Pi (π) Value:"
+                                   else if (currentLanguage == "Chinese") "选用圆周率 (π) 值："
+                                   else "Pilihan Nilai Pi (π):",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = if (piType == "22/7") "π ≈ 22/7" else "π ≈ 3.142",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = if (currentLanguage == "English") "Toggle to choose which Pi value to use for surface area and volume:"
+                               else if (currentLanguage == "Chinese") "切换计算表面积和体积时选用的圆周率值："
+                               else "Tukar untuk memilih nilai Pi untuk luas permukaan dan isipadu:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { piType = "22/7" },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (piType == "22/7") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "22 / 7",
+                                color = if (piType == "22/7") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Button(
+                            onClick = { piType = "3.142" },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (piType == "3.142") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "3.142",
+                                color = if (piType == "3.142") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

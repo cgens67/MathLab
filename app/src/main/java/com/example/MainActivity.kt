@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
       ) {
           // Add system back button handler so the app doesn't close when navigating
           androidx.activity.compose.BackHandler(enabled = navigationStack.size > 1) {
-              navigationStack.removeLast()
+              navigationStack.removeAt(navigationStack.size - 1)
           }
 
           androidx.compose.foundation.layout.Box(
@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                               },
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               },
                               enableDynamic = enableDynamicTheme,
@@ -151,7 +151,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -162,7 +162,7 @@ class MainActivity : ComponentActivity() {
                               useSystemFont = useSystemFont,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -182,7 +182,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -192,7 +192,7 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )
@@ -202,7 +202,17 @@ class MainActivity : ComponentActivity() {
                               currentLanguage = currentLanguage,
                               onBack = {
                                   if (navigationStack.size > 1) {
-                                      navigationStack.removeLast()
+                                      navigationStack.removeAt(navigationStack.size - 1)
+                                  }
+                              }
+                          )
+                      }
+                      "quiz" -> {
+                          QuizScreen(
+                              currentLanguage = currentLanguage,
+                              onBack = {
+                                  if (navigationStack.size > 1) {
+                                      navigationStack.removeAt(navigationStack.size - 1)
                                   }
                               }
                           )

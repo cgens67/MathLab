@@ -51,7 +51,8 @@ fun AlgebraScreens(
         Localization.get("subject_title", currentLanguage),
         Localization.get("expansion", currentLanguage),
         Localization.get("factorisation", currentLanguage),
-        Localization.get("hcf_lcm", currentLanguage)
+        Localization.get("hcf_lcm", currentLanguage),
+        if (currentLanguage == "English") "Textbook Calculator" else if (currentLanguage == "Chinese") "教材计算器" else "Kalkulator Buku Teks"
     )
 
     Scaffold(
@@ -109,6 +110,7 @@ fun AlgebraScreens(
                     1 -> ExpansionPanel(currentLanguage)
                     2 -> FactorisationPanel(currentLanguage)
                     3 -> HcfLcmPanel(currentLanguage)
+                    4 -> ExpressiveCalculatorPanel(currentLanguage)
                 }
             }
         }
@@ -151,7 +153,9 @@ fun SubjectChangePanel(currentLanguage: String, useSystemFont: Boolean) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Pilih Rumus / Choose Formula Template:",
+                    text = if (currentLanguage == "English") "Choose Formula Template:" 
+                           else if (currentLanguage == "Chinese") "选择公式模板："
+                           else "Pilih Rumus:",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

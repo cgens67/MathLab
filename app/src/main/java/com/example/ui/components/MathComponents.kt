@@ -257,8 +257,8 @@ fun ExpressiveCarousel(
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
                             Text(
-                                text = if (language == "Bahasa Melayu") "Langkah ${page + 1} / Step ${page + 1}"
-                                       else if (language == "Chinese") "步骤 ${page + 1} / Step ${page + 1}"
+                                text = if (language == "Bahasa Melayu") "Langkah ${page + 1}"
+                                       else if (language == "Chinese") "步骤 ${page + 1}"
                                        else "Step ${page + 1}",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
