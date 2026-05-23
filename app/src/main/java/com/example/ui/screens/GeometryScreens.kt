@@ -35,6 +35,9 @@ import com.example.ui.components.CircleDiagram
 import com.example.ui.components.NetsVisualizer
 import com.example.ui.components.PolygonDiagram
 import com.example.ui.settings.Localization
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.CircleShape
+import com.example.ui.components.LoadingIndicator
 
 // ============================================
 // 1. PATTERNS AND SEQUENCES SCREEN
@@ -45,11 +48,12 @@ fun PatternsScreen(
     currentLanguage: String,
     onBack: () -> Unit
 ) {
-    var rawInput by remember { mutableStateOf("2, 5, 8, 11") }
-    var result by remember { mutableStateOf<Tingkatan2MathSuite.SequenceResult?>(null) }
-    var errorText by remember { mutableStateOf<String?>(null) }
-
-    val scrollState = rememberScrollState()
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabTitles = listOf(
+        if (currentLanguage == "English") "Sequence Solver" else if (currentLanguage == "Chinese") "序列求解" else "Penyelesai Jujukan",
+        if (currentLanguage == "English") "Fibonacci Sequence" else if (currentLanguage == "Chinese") "斐波那契" else "Jujukan Fibonacci",
+        if (currentLanguage == "English") "Pascal's Triangle" else if (currentLanguage == "Chinese") "帕斯卡三角" else "Segi Tiga Pascal"
+    )
 
     Scaffold(
         topBar = {
@@ -67,212 +71,496 @@ fun PatternsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth()
+            // Elegant M3 Primary Tab Row
+            TabRow(
+                selectedTabIndex = selectedTab,
+                modifier = Modifier.fillMaxWidth().testTag("patterns_tab_row")
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = Localization.get("enter_seq", currentLanguage),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    OutlinedTextField(
-                        value = rawInput,
-                        onValueChange = {
-                            rawInput = it
-                            errorText = null
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            )
                         },
-                        placeholder = { Text("e.g. 2, 5, 8, 11") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth().testTag("seq_input_text")
+                        modifier = Modifier.testTag("patterns_tab_$index")
                     )
-
-                    Button(
-                        onClick = {
-                            val parsed = rawInput.split(",")
-                                .mapNotNull { it.trim().toIntOrNull() }
-                            if (parsed.size >= 3) {
-                                result = Tingkatan2MathSuite.solveSequence(parsed)
-                                errorText = null
-                            } else {
-                                errorText = Localization.get("seq_error", currentLanguage)
-                                result = null
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().testTag("btn_seq_solve")
-                    ) {
-                        Icon(Icons.Default.Calculate, contentDescription = "Solve")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(Localization.get("solve", currentLanguage))
-                    }
-
-                    errorText?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
                 }
             }
 
-            AnimatedVisibility(
-                visible = result != null,
-                enter = fadeIn() + expandVertically() + slideInVertically(initialOffsetY = { 40 }),
-                exit = fadeOut() + shrinkVertically()
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (selectedTab) {
+                    0 -> SequenceSolverTab(currentLanguage)
+                    1 -> FibonacciVisualizerTab(currentLanguage)
+                    2 -> PascalTriangleVisualizerTab(currentLanguage)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SequenceSolverTab(currentLanguage: String) {
+    var rawInput by remember { mutableStateOf("2, 5, 8, 11") }
+    var result by remember { mutableStateOf<Tingkatan2MathSuite.SequenceResult?>(null) }
+    var errorText by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    
+    val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val res = result ?: return@AnimatedVisibility
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = Localization.get("enter_seq", currentLanguage),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                OutlinedTextField(
+                    value = rawInput,
+                    onValueChange = {
+                        rawInput = it
+                        errorText = null
+                    },
+                    placeholder = { Text("e.g. 2, 5, 8, 11") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("seq_input_text")
+                )
+
+                Button(
+                    onClick = {
+                        val parsed = rawInput.split(",")
+                            .mapNotNull { it.trim().toIntOrNull() }
+                        if (parsed.size >= 3) {
+                            coroutineScope.launch {
+                                isLoading = true
+                                kotlinx.coroutines.delay(650) // Sweet simulated parsing indicator
+                                result = Tingkatan2MathSuite.solveSequence(parsed)
+                                errorText = null
+                                isLoading = false
+                            }
+                        } else {
+                            errorText = Localization.get("seq_error", currentLanguage)
+                            result = null
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("btn_seq_solve")
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = Localization.get("pattern_is", currentLanguage),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                    Icon(Icons.Default.Calculate, contentDescription = "Solve")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(Localization.get("solve", currentLanguage))
+                }
 
-                        Text(
-                            text = if (currentLanguage == "Bahasa Melayu") res.patternDescriptionMs 
-                                   else if (currentLanguage == "Chinese") {
-                                       if (res.patternDescriptionEn.contains("decreasing", ignoreCase = true)) "递减等差数列"
-                                       else "等差数列"
-                                   } else res.patternDescriptionEn,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                errorText?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+        // Custom M3 Loading Indicator usage for Patterns standard calculations
+        AnimatedVisibility(
+            visible = isLoading,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                LoadingIndicator(
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
 
-                        // Animated Pop/Stagger Visualizer Row
-                        Text(
-                            text = if (currentLanguage == "Chinese") "数列项排布与公差：" else "Interactive Sequence & Common Differences:",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .padding(vertical = 12.dp)
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val parsedNums = rawInput.split(",").mapNotNull { it.trim().toIntOrNull() }
-                            parsedNums.forEachIndexed { idx, num ->
-                                var itemVisible by remember { mutableStateOf(false) }
-                                LaunchedEffect(rawInput) {
-                                    itemVisible = false
-                                    kotlinx.coroutines.delay(idx * 120L)
-                                    itemVisible = true
+        AnimatedVisibility(
+            visible = !isLoading && result != null,
+            enter = fadeIn() + expandVertically() + slideInVertically(initialOffsetY = { 40 }),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            val res = result ?: return@AnimatedVisibility
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = Localization.get("pattern_is", currentLanguage),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Text(
+                        text = if (currentLanguage == "Bahasa Melayu") res.patternDescriptionMs 
+                               else if (currentLanguage == "Chinese") {
+                                   if (res.patternDescriptionEn.contains("decreasing", ignoreCase = true)) "递减等差数列"
+                                   else "等差数列"
+                               } else res.patternDescriptionEn,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = if (currentLanguage == "Chinese") "数列项排布与公差：" else "Interactive Sequence & Common Differences:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val parsedNums = rawInput.split(",").mapNotNull { it.trim().toIntOrNull() }
+                        parsedNums.forEachIndexed { idx, num ->
+                            var itemVisible by remember { mutableStateOf(false) }
+                            LaunchedEffect(rawInput, isLoading) {
+                                itemVisible = false
+                                kotlinx.coroutines.delay(idx * 100L)
+                                itemVisible = true
+                            }
+                            AnimatedVisibility(
+                                visible = itemVisible,
+                                enter = scaleIn(animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)) + fadeIn()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = num.toString(),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            
+                            if (idx < parsedNums.size - 1) {
+                                val diff = parsedNums[idx + 1] - num
+                                var diffVisible by remember { mutableStateOf(false) }
+                                LaunchedEffect(rawInput, isLoading) {
+                                    diffVisible = false
+                                    kotlinx.coroutines.delay(idx * 100L + 50L)
+                                    diffVisible = true
                                 }
                                 AnimatedVisibility(
-                                    visible = itemVisible,
-                                    enter = scaleIn(animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)) + fadeIn()
+                                    visible = diffVisible,
+                                    enter = fadeIn() + slideInVertically(initialOffsetY = { -15 })
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(54.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = num.toString(),
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                                
-                                if (idx < parsedNums.size - 1) {
-                                    val diff = parsedNums[idx + 1] - num
-                                    var diffVisible by remember { mutableStateOf(false) }
-                                    LaunchedEffect(rawInput) {
-                                        diffVisible = false
-                                        kotlinx.coroutines.delay(idx * 120L + 60L)
-                                        diffVisible = true
-                                    }
-                                    AnimatedVisibility(
-                                        visible = diffVisible,
-                                        enter = fadeIn() + slideInVertically(initialOffsetY = { -15 })
-                                    ) {
-                                        Text(
-                                            text = if (diff >= 0) " +$diff " else " $diff ",
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.tertiary,
-                                            modifier = Modifier.padding(horizontal = 2.dp)
-                                        )
-                                    }
+                                    Text(
+                                        text = if (diff >= 0) " +$diff " else " $diff ",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.padding(horizontal = 2.dp)
+                                    )
                                 }
                             }
                         }
+                    }
 
+                    Text(
+                        text = Localization.get("general_term", currentLanguage),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
+                    ) {
                         Text(
-                            text = Localization.get("general_term", currentLanguage),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            text = res.formula,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(12.dp).fillMaxWidth()
                         )
+                    }
 
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
+                    Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 12.dp))
+
+                    Text(
+                        text = "${Localization.get("explanation", currentLanguage)}:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+
+                    res.steps.forEach { step ->
+                        val translatedStep = if (currentLanguage == "Chinese") {
+                            var s = step
+                            if (s.contains("Common difference", ignoreCase = true)) {
+                                val d = s.substringAfter("d = ").trim()
+                                "公差： d = $d"
+                            } else if (s.contains("First term", ignoreCase = true)) {
+                                val a = s.substringAfter("a = ").trim()
+                                "首项元素： a = $a"
+                            } else if (s.contains("Substitute into general formula", ignoreCase = true)) {
+                                "代入等差通项公式： Tn = a + (n - 1)d"
+                            } else if (s.contains("Simplify", ignoreCase = true)) {
+                                "最简通项公式： Tn = $s"
+                            } else {
+                                s
+                            }
+                        } else step
+
+                        Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                            Text("• ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                            Text(translatedStep, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FibonacciVisualizerTab(currentLanguage: String) {
+    var terms by remember { mutableStateOf(8f) }
+    val n = terms.toInt()
+    val scrollState = rememberScrollState()
+    
+    val fibList = remember(n) {
+        val list = mutableListOf(1, 1)
+        for (i in 2 until n) {
+            list.add(list[i - 1] + list[i - 2])
+        }
+        list.take(n)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = if (currentLanguage == "English") "Fibonacci Sequence Generator" 
+                           else if (currentLanguage == "Chinese") "斐波那契数列生成器"
+                           else "Penjana Jujukan Fibonacci",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Text(
+                    text = if (currentLanguage == "English") 
+                        "Rule: Each term is the sum of the two preceding ones. Formula: Fn = Fn-1 + Fn-2"
+                        else if (currentLanguage == "Chinese")
+                        "规律：除首两项外，每个数字是前两个数字之和。公式：Fn = Fn-1 + Fn-2"
+                        else "Pola: Setiap nombor selepas dua sebutan pertama ialah hasil tambah dua sebutan sebelumnya. Rumus: Fn = Fn-1 + Fn-2",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Terms: $n", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Slider(
+                        value = terms,
+                        onValueChange = { terms = it },
+                        valueRange = 3f..12f,
+                        steps = 8,
+                        modifier = Modifier.weight(1f).testTag("fib_terms_slider")
+                    )
+                }
+                
+                Text(
+                    text = if (currentLanguage == "Chinese") "数列项排布：" else "Generated Sequence Terms:",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(vertical = 4.dp)
+                ) {
+                    fibList.forEachIndexed { idx, value ->
+                        var isVisible by remember { mutableStateOf(false) }
+                        LaunchedEffect(n) {
+                            isVisible = false
+                            kotlinx.coroutines.delay(idx * 70L)
+                            isVisible = true
+                        }
+                        
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = scaleIn(animationSpec = spring(0.75f, 300f)) + fadeIn()
                         ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = value.toString(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                                Text(
+                                    text = "F$idx",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                        
+                        if (idx < fibList.size - 1) {
+                            Text("+", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                        }
+                    }
+                }
+                
+                if (n >= 4) {
+                    val last2 = fibList[n - 1].toDouble()
+                    val last1 = fibList[n - 2].toDouble()
+                    val ratio = last2 / last1
+                    
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
                             Text(
-                                text = res.formula,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Black,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(12.dp).fillMaxWidth()
+                                text = if (currentLanguage == "English") "The Golden Ratio (\u03c6) Convergence"
+                                       else if (currentLanguage == "Chinese") "黄金比例 (\u03c6) 收敛规律"
+                                       else "Konvergens ke arah Nisbah Keemasan (\u03c6)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = if (currentLanguage == "English")
+                                    "As terms increase, the ratio F(n)/F(n-1) approaches \u03c6 \u2248 1.61803...\nCalculation: F(${n-1})/F(${n-2}) = $last2 ÷ $last1 = ${String.format("%.5f", ratio)}"
+                                    else if (currentLanguage == "Chinese")
+                                    "随着项数增加，相邻项的比值 F(n)/F(n-1) 逼近 \u03c6 \u2248 1.61803...\n计算：F(${n-1})/F(${n-2}) = $last2 ÷ $last1 = ${String.format("%.5f", ratio)}"
+                                    else "Nisbah dua sebutan bersebelahan F(n) ÷ F(n-1) akan menghampiri \u03c6 \u2248 1.61803...\nNisbah: F(${n-1}) ÷ F(${n-2}) = $last2 ÷ $last1 = ${String.format("%.5f", ratio)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                lineHeight = 16.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
                             )
                         }
+                    }
+                }
 
-                        Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 12.dp))
-
-                        Text(
-                            text = "${Localization.get("explanation", currentLanguage)}:",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-
-                        res.steps.forEach { step ->
-                            val translatedStep = if (currentLanguage == "Chinese") {
-                                var s = step
-                                if (s.contains("Common difference", ignoreCase = true)) {
-                                    val d = s.substringAfter("d = ").trim()
-                                    "公差： d = $d"
-                                } else if (s.contains("First term", ignoreCase = true)) {
-                                    val a = s.substringAfter("a = ").trim()
-                                    "首项元素： a = $a"
-                                } else if (s.contains("Substitute into general formula", ignoreCase = true)) {
-                                    "代入等差通项公式： Tn = a + (n - 1)d"
-                                } else if (s.contains("Simplify", ignoreCase = true)) {
-                                    val f = s.substringAfter("simplify: ").trim()
-                                    "最简一次函数关系： Tn = $f"
-                                } else {
-                                    s
-                                }
-                            } else step
-
-                            Row(modifier = Modifier.padding(vertical = 4.dp)) {
-                                Text("• ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text(translatedStep, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (currentLanguage == "English") "Fibonacci Geometric Squares Visual:" 
+                           else if (currentLanguage == "Chinese") "斐波那契几何堆叠正方形："
+                           else "Visual Geometrik Segi Empat Fibonacci:",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.Bottom,
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        fibList.forEachIndexed { idx, valItem ->
+                            val scaleHeight = (valItem * 8).coerceAtMost(140)
+                            val scaleWidth = (valItem * 6).coerceIn(12, 44)
+                            
+                            var boxHeight by remember { mutableStateOf(0f) }
+                            LaunchedEffect(n) {
+                                boxHeight = 0f
+                                kotlinx.coroutines.delay(idx * 75L)
+                                boxHeight = scaleHeight.toFloat()
+                            }
+                            
+                            val animBoxHeight by animateFloatAsState(
+                                targetValue = boxHeight,
+                                animationSpec = spring(dampingRatio = 0.75f, stiffness = 150f)
+                            )
+                            
+                            Box(
+                                modifier = Modifier
+                                    .width(scaleWidth.dp)
+                                    .height(animBoxHeight.dp)
+                                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                                    .background(
+                                        if (idx % 2 == 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                        else MaterialTheme.colorScheme.tertiary.copy(alpha = 0.7f)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = valItem.toString(),
+                                    fontSize = 10.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -282,6 +570,203 @@ fun PatternsScreen(
     }
 }
 
+@Composable
+fun PascalTriangleVisualizerTab(currentLanguage: String) {
+    var rowsVal by remember { mutableStateOf(6f) }
+    val rowCount = rowsVal.toInt()
+    
+    var highlightOdds by remember { mutableStateOf(false) }
+    var showRowSums by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    
+    val triangle = remember(rowCount) {
+        val result = mutableListOf<List<Int>>()
+        for (i in 0 until rowCount) {
+            val row = mutableListOf<Int>()
+            for (j in 0..i) {
+                if (j == 0 || j == i) {
+                    row.add(1)
+                } else {
+                    val prevRow = result[i - 1]
+                    row.add(prevRow[j - 1] + prevRow[j])
+                }
+            }
+            result.add(row)
+        }
+        result
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = if (currentLanguage == "English") "Pascal's Triangle Visualizer" 
+                           else if (currentLanguage == "Chinese") "帕斯卡/杨辉三角形"
+                           else "Segi Tiga Pascal Interaktif",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Text(
+                    text = if (currentLanguage == "English")
+                        "Rule: The sum of two adjacent items in a row determines the number underneath. Great for algebra binom expansions (a + b)^n."
+                        else if (currentLanguage == "Chinese")
+                        "规律：上一排两个相邻单元数字相加，即为正下方的数。杨辉三角的每行对应二项式展开 (a + b)^n 的展开系数。"
+                        else "Pola: Hasil tambah dua nombor bersebelahan di baris atas menentukan nombor di baris bawah.\nSangat membantu dalam kembangan binomial (a + b)^n.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Rows: $rowCount", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Slider(
+                        value = rowsVal,
+                        onValueChange = { rowsVal = it },
+                        valueRange = 3f..8f,
+                        steps = 4,
+                        modifier = Modifier.weight(1f).testTag("pascal_rows_slider")
+                    )
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically, 
+                        modifier = Modifier.weight(1f).clickable { highlightOdds = !highlightOdds }
+                    ) {
+                        Checkbox(checked = highlightOdds, onCheckedChange = { highlightOdds = it })
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (currentLanguage == "English") "Fractal Pattern" 
+                                   else if (currentLanguage == "Chinese") "谢尔宾斯基分形"
+                                   else "Fraktal Sierpinski", 
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically, 
+                        modifier = Modifier.weight(1f).clickable { showRowSums = !showRowSums }
+                    ) {
+                        Checkbox(checked = showRowSums, onCheckedChange = { showRowSums = it })
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (currentLanguage == "English") "Sums (2ⁿ)" 
+                                   else if (currentLanguage == "Chinese") "行项之和 (2ⁿ)"
+                                   else "Jumlah Baris (2ⁿ)", 
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        triangle.forEachIndexed { rIdx, row ->
+                            var rowVisible by remember { mutableStateOf(false) }
+                            LaunchedEffect(rowCount) {
+                                rowVisible = false
+                                kotlinx.coroutines.delay(rIdx * 75L)
+                                rowVisible = true
+                            }
+                            
+                            AnimatedVisibility(
+                                visible = rowVisible,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { -20 })
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    row.forEachIndexed { cIdx, element ->
+                                        val isOdd = element % 2 != 0
+                                        val highlight = highlightOdds && isOdd
+                                        
+                                        val bubbleBg = when {
+                                            highlight -> MaterialTheme.colorScheme.primary
+                                            isOdd -> MaterialTheme.colorScheme.secondaryContainer
+                                            else -> MaterialTheme.colorScheme.surfaceVariant
+                                        }
+                                        val bubbleText = when {
+                                            highlight -> MaterialTheme.colorScheme.onPrimary
+                                            isOdd -> MaterialTheme.colorScheme.onSecondaryContainer
+                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                        
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 38.dp, height = 34.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(bubbleBg),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = element.toString(),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = bubbleText,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                    
+                                    if (showRowSums) {
+                                        val sum = row.sum()
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .size(width = 44.dp, height = 28.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.tertiaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "=$sum",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 // ============================================
 // 2. POLYGONS SCREEN

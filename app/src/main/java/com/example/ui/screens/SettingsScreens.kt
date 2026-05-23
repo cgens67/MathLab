@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -603,6 +604,7 @@ fun SettingsScreen(
     onNavigateToLanguage: () -> Unit,
     onNavigateToAppearance: () -> Unit,
     onNavigateToAbout: () -> Unit,
+    onNavigateToCatchUp: () -> Unit,
     onShowSupport: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -652,6 +654,17 @@ fun SettingsScreen(
                     icon = Icons.Default.Search, // Utilizing existing imported Search icon for language discovery
                     onClick = onNavigateToLanguage,
                     testTag = "settings_lang_option"
+                )
+            }
+
+            // Catch-Up Booster Option
+            item {
+                SettingsOptionCard(
+                    title = if (currentLanguage == "English") "Form 1 Catch-Up Booster" else "Pengukuhan Matematik Tingkatan 1",
+                    subtitle = if (currentLanguage == "English") "Master core Form 1 arithmetic, integers, & algebra" else "Kuasai kemahiran asas matematik, integer & algebra",
+                    icon = Icons.Default.RocketLaunch,
+                    onClick = onNavigateToCatchUp,
+                    testTag = "settings_catchup_option"
                 )
             }
 

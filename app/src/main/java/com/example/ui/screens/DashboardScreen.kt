@@ -4,17 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwitchAccessShortcut
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,17 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.settings.Localization
-
 import androidx.compose.ui.graphics.Color
 import com.example.ui.theme.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.RocketLaunch
-import com.example.ui.components.SupportDevelopmentModal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,109 +77,65 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            // Student Banner matching Section 1 Linear Equation Solver style
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .testTag("student_tip_banner")
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Calculate,
-                        contentDescription = "Tip",
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = Localization.get("student_tip", currentLanguage),
-                        style = MaterialTheme.typography.bodySmall,
-                        lineHeight = 18.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            // Topic booster: Form 1 Catch-Up Booster Card placed prominently in the main Column layout!
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                ),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp)
-                    .clickable { onNavigateToTopic("catchup") }
-                    .testTag("booster_catchup_card"),
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.tertiary)
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.RocketLaunch,
-                            contentDescription = "Catch Up Booster",
-                            tint = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (currentLanguage == "English") "Let's Start Over & Catch Up! 🚀" else "Mari Mula Semula Untuk Kejar! 🚀",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = if (currentLanguage == "English") 
-                                "Struggling? Master core Form 1 Math skills (Rational Numbers, Algebra, Equations, Polygons) to boost your Form 2 journey!"
-                                else "Sukar faham? Kuasai topik teras Matematik T1 untuk melonjakkan prestasi T2 anda!",
-                            style = MaterialTheme.typography.bodySmall,
-                            lineHeight = 16.sp,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
-                        )
-                    }
-                }
-            }
-
-            Text(
-                text = Localization.get("welcome", currentLanguage),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            // Dynamic grid layout displaying the maths topics of Tingkatan 2
             LazyVerticalGrid(
-                columns = GridCells.Fixed(1),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f)
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp)
             ) {
-                // Topic 1: Patterns and Sequences
+                // Header Banner: Slim and elegant text banner (spans full 2 columns)
+                item(span = { GridItemSpan(2) }) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 6.dp)
+                            .testTag("student_tip_banner")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Spark",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = Localization.get("student_tip", currentLanguage),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                lineHeight = 15.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // Title Welcome (spans full 2 columns)
+                item(span = { GridItemSpan(2) }) {
+                    Text(
+                        text = Localization.get("welcome", currentLanguage),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    )
+                }
+
+                // Grid 1/5: Patterns
                 item {
-                    TopicCard(
+                    CompactTopicCard(
                         title = Localization.get("topic_patterns", currentLanguage),
                         description = Localization.get("pola_desc", currentLanguage),
                         icon = Icons.Default.Timeline,
@@ -196,9 +146,9 @@ fun DashboardScreen(
                     )
                 }
 
-                // Topic 2: Algebraic Formulae
+                // Grid 2/5: Algebraic Formulae
                 item {
-                    TopicCard(
+                    CompactTopicCard(
                         title = Localization.get("topic_algebra", currentLanguage),
                         description = Localization.get("formulae_desc", currentLanguage),
                         icon = Icons.Default.SwitchAccessShortcut,
@@ -209,9 +159,9 @@ fun DashboardScreen(
                     )
                 }
 
-                // Topic 3: Polygons
+                // Grid 3/5: Polygons
                 item {
-                    TopicCard(
+                    CompactTopicCard(
                         title = Localization.get("topic_polygons", currentLanguage),
                         description = Localization.get("polygons_desc", currentLanguage),
                         icon = Icons.Default.Category,
@@ -222,9 +172,9 @@ fun DashboardScreen(
                     )
                 }
 
-                // Topic 4: Circles
+                // Grid 4/5: Circles
                 item {
-                    TopicCard(
+                    CompactTopicCard(
                         title = Localization.get("topic_circles", currentLanguage),
                         description = Localization.get("circles_desc", currentLanguage),
                         icon = Icons.Default.PieChart,
@@ -235,12 +185,12 @@ fun DashboardScreen(
                     )
                 }
 
-                // Topic 5: 3D Shapes
-                item {
-                    TopicCard(
+                // Grid 5/5: 3D Shapes (spans full 2 columns for perfect symmetry)
+                item(span = { GridItemSpan(2) }) {
+                    FullWidthTopicCard(
                         title = Localization.get("topic_shapes", currentLanguage),
                         description = Localization.get("shapes_desc", currentLanguage),
-                        icon = Icons.Default.Memory,
+                        icon = Icons.Default.Calculate,
                         containerColor = shapesBg,
                         contentColor = shapesText,
                         onClick = { onNavigateToTopic("shapes") },
@@ -253,7 +203,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun TopicCard(
+fun CompactTopicCard(
     title: String,
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -267,48 +217,109 @@ fun TopicCard(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .height(130.dp)
+            .clickable(onClick = onClick)
+            .testTag(testTag)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = contentColor.copy(alpha = 0.85f),
+                modifier = Modifier.size(28.dp)
+            )
+            
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = contentColor,
+                    maxLines = 1,
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                    color = contentColor.copy(alpha = 0.75f),
+                    lineHeight = 13.sp,
+                    maxLines = 2
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FullWidthTopicCard(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    testTag: String
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(96.dp)
             .clickable(onClick = onClick)
             .testTag(testTag)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+                .fillMaxSize()
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onClick() },
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(contentColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = contentColor.copy(alpha = 0.85f),
-                    modifier = Modifier.size(32.dp)
+                    tint = contentColor,
+                    modifier = Modifier.size(24.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = contentColor
+                    color = contentColor,
+                    maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                     color = contentColor.copy(alpha = 0.75f),
-                    lineHeight = 16.sp
+                    lineHeight = 14.sp,
+                    maxLines = 2
                 )
             }
         }

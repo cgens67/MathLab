@@ -396,9 +396,68 @@ fun ExpansionPanel(currentLanguage: String) {
 }
 
 
+// --- HELPER FOR NATURAL EXPRESSION PARSING ---
+fun parseNaturalFactorisation(input: String): Triple<Int, Int, Int>? {
+    var cleaned = input.lowercase()
+        .replace("factorise", "")
+        .replace("factorize", "")
+        .replace(" ", "")
+        .trim()
+    
+    if (cleaned.isEmpty()) return null
+    cleaned = cleaned.replace("²", "^2")
+    val variableChar = cleaned.firstOrNull { it in 'a'..'z' } ?: 'x'
+    
+    val terms = mutableListOf<String>()
+    var currentTerm = ""
+    for (char in cleaned) {
+        if (char == '+' || char == '-') {
+            if (currentTerm.isNotEmpty()) {
+                terms.add(currentTerm)
+            }
+            currentTerm = char.toString()
+        } else {
+            currentTerm += char
+        }
+    }
+    if (currentTerm.isNotEmpty()) {
+        terms.add(currentTerm)
+    }
+    
+    var a = 0
+    var b = 0
+    var c = 0
+    
+    for (term in terms) {
+        val t = term.trim()
+        if (t.isEmpty()) continue
+        if (t.contains("$variableChar^2")) {
+            val rawCoeff = t.replace("$variableChar^2", "")
+            a = when {
+                rawCoeff.isEmpty() -> 1
+                rawCoeff == "+" -> 1
+                rawCoeff == "-" -> -1
+                else -> rawCoeff.toIntOrNull() ?: 1
+            }
+        } else if (t.contains(variableChar.toString())) {
+            val rawCoeff = t.replace(variableChar.toString(), "")
+            b = when {
+                rawCoeff.isEmpty() -> 1
+                rawCoeff == "+" -> 1
+                rawCoeff == "-" -> -1
+                else -> rawCoeff.toIntOrNull() ?: 0
+            }
+        } else {
+            c = t.toIntOrNull() ?: 0
+        }
+    }
+    return Triple(a, b, c)
+}
+
 // --- PANEL 3: FACTORISATION (Pemfaktoran Kaedah Pendaraban Silang) ---
 @Composable
 fun FactorisationPanel(currentLanguage: String) {
+    var naturalInput by remember { mutableStateOf("") }
     var aInput by remember { mutableStateOf("1") }
     var bInput by remember { mutableStateOf("5") }
     var cInput by remember { mutableStateOf("6") }
@@ -413,6 +472,87 @@ fun FactorisationPanel(currentLanguage: String) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Natural Input Card
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
+            ),
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth().border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(24.dp)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = if (currentLanguage == "English") "Natural Expression Solver" 
+                           else if (currentLanguage == "Chinese") "自然语言公式求解器"
+                           else "Penyelesai Ekspresi Semulajadi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                
+                Text(
+                    text = if (currentLanguage == "English") "Type directly (e.g., \"factorise 9m² - 100\" or \"x² + 5x + 6\"):" 
+                           else if (currentLanguage == "Chinese") "直接输入代数式（例如 \"factorise 9m² - 100\" 或 \"x² + 5x + 6\"）："
+                           else "Taip formula terus (cth., \"factorise 9m² - 100\" atau \"x² + 5x + 6\"):",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedTextField(
+                    value = naturalInput,
+                    onValueChange = { newValue ->
+                        naturalInput = newValue
+                        val parsed = parseNaturalFactorisation(newValue)
+                        if (parsed != null) {
+                            aInput = parsed.first.toString()
+                            bInput = parsed.second.toString()
+                            cInput = parsed.third.toString()
+                        }
+                    },
+                    placeholder = { Text("factorise 9m² - 100") },
+                    modifier = Modifier.fillMaxWidth().testTag("fact_natural_input"),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                if (naturalInput.isNotEmpty()) {
+                    val parsed = parseNaturalFactorisation(naturalInput)
+                    if (parsed != null) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (currentLanguage == "English") "Parsed Coefficients:" 
+                                           else if (currentLanguage == "Chinese") "解析系数："
+                                           else "Pekali Diperoleh:",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text("a = ${parsed.first}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                Text("b = ${parsed.second}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                Text("c = ${parsed.third}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Card(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier.fillMaxWidth()

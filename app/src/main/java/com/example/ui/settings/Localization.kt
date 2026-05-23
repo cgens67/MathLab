@@ -12,6 +12,12 @@ object Localization {
     }
 
     fun get(key: String, language: String): String {
+        // Prefer static translation map first to avoid falling back to English from default XML
+        val staticMap = translations[language]
+        if (staticMap != null && staticMap.containsKey(key)) {
+            return staticMap[key] ?: key
+        }
+
         val context = appContext
         if (context != null) {
             try {

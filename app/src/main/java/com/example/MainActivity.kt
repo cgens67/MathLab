@@ -50,6 +50,11 @@ class MainActivity : ComponentActivity() {
           fontSizeScale = fontSizeScale,
           shapeRoundedness = shapeRoundedness
       ) {
+          // Add system back button handler so the app doesn't close when navigating
+          androidx.activity.compose.BackHandler(enabled = navigationStack.size > 1) {
+              navigationStack.removeLast()
+          }
+
           androidx.compose.foundation.layout.Box(
               modifier = Modifier
                   .fillMaxSize()
@@ -93,6 +98,9 @@ class MainActivity : ComponentActivity() {
                               },
                               onNavigateToAbout = {
                                   navigationStack.add("about")
+                              },
+                              onNavigateToCatchUp = {
+                                  navigationStack.add("catchup")
                               },
                               onShowSupport = {
                                   showSupportModal = true

@@ -1,9 +1,7 @@
 package com.example.ui.components
 
 import kotlinx.coroutines.launch
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -39,6 +37,90 @@ import androidx.compose.ui.unit.sp
 import com.example.math.AlgebraStep
 import kotlin.math.cos
 import kotlin.math.sin
+
+@Composable
+fun LoadingIndicator(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    shapes: List<Any> = emptyList()
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "loading")
+    
+    val pulse1 by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 600
+                0.3f at 0
+                1.0f at 200
+                0.3f at 400
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse1"
+    )
+    val pulse2 by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 600
+                0.3f at 100
+                1.0f at 300
+                0.3f at 500
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse2"
+    )
+    val pulse3 by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 600
+                0.3f at 200
+                1.0f at 400
+                0.3f at 600
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse3"
+    )
+
+    Row(
+        modifier = modifier.wrapContentSize(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(24.dp)) {
+            val r = (size.minDimension / 2) * pulse1
+            drawCircle(color = color, radius = r)
+        }
+        Canvas(modifier = Modifier.size(24.dp)) {
+            val s = 24.dp.toPx() * pulse2
+            val offset = (24.dp.toPx() - s) / 2
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(offset, offset),
+                size = Size(s, s),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx(), 6.dp.toPx())
+            )
+        }
+        Canvas(modifier = Modifier.size(24.dp)) {
+            val s = 24.dp.toPx() * pulse3
+            val offset = (24.dp.toPx() - s) / 2
+            val path = Path().apply {
+                moveTo(offset + s / 2, offset)
+                lineTo(offset, offset + s)
+                lineTo(offset + s, offset + s)
+                close()
+            }
+            drawPath(path = path, color = color)
+        }
+    }
+}
 
 fun translateExplanationToZh(en: String): String {
     if (en.contains("already isolated", ignoreCase = true)) {
